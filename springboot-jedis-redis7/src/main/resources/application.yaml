@@ -1,0 +1,6 @@
+server:
+  port: 7983
+
+spring:
+  application:
+    name: RedisStudy
