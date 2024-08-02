@@ -80,13 +80,13 @@
             <artifactId>springfox-swagger-ui</artifactId>
             <version>2.9.2</version>
         </dependency>
-        <!-- Mysql 数据库驱动 -->
+        <!--&lt;!&ndash; Mysql 数据库驱动 &ndash;&gt;
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.version}</version>
         </dependency>
-        <!-- springboot集成druid连接池-->
+        &lt;!&ndash; springboot集成druid连接池&ndash;&gt;
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-starter</artifactId>
@@ -97,7 +97,7 @@
             <artifactId>druid</artifactId>
             <version>${druid.version}</version>
         </dependency>
-        <!-- mybatis和SpringBoot整合 -->
+        &lt;!&ndash; mybatis和SpringBoot整合 &ndash;&gt;
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -112,13 +112,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
-        <!-- persistence -->
+        &lt;!&ndash; persistence &ndash;&gt;
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
             <version>1.0.2</version>
         </dependency>
-        <!-- 通用Mapper -->
+        &lt;!&ndash; 通用Mapper &ndash;&gt;
         <dependency>
             <groupId>tk.mybatis</groupId>
             <artifactId>mapper</artifactId>
@@ -127,8 +127,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-
+        </dependency>-->
         <!-- 通用基础配置 -->
         <dependency>
             <groupId>junit</groupId>

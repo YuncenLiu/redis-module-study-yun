@@ -1,5 +1,6 @@
-package com.liuyuncen.jedis;
+package com.liuyuncen.demo.jedis;
 
+import com.liuyuncen.constants.RedisConstants;
 import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
@@ -16,9 +17,11 @@ import java.util.Set;
  * @version: 1.0
  */
 public class JedisDemo {
+
+
     public static void main(String[] args) {
-        Jedis jedis = new Jedis("192.168.58.10", 16380);
-        jedis.auth("123456");
+        Jedis jedis = new Jedis(RedisConstants.REDIS_IP, RedisConstants.REDIS_PORT);
+        jedis.auth(RedisConstants.REDIS_PASSWORD);
         System.out.println(jedis.ping());
 
         Set<String> keys = jedis.keys("*");
