@@ -14,9 +14,9 @@ public class RedisConstants {
     public static String REDIS_PASSWORD = "";
 
 
-    public static String REDIS_IP_WIN = "";
-    public static Integer REDIS_PORT_WIN = null;
-    public static String REDIS_PASSWORD_WIN = "";
+    public static String REDIS_IP_WIN = "192.168.111.36";
+    public static Integer REDIS_PORT_WIN = 16301;
+    public static String REDIS_PASSWORD_WIN = "123456";
 
 
     public static String REDIS_IP_MAC = "192.168.58.10";

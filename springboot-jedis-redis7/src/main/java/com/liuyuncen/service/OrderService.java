@@ -2,6 +2,7 @@ package com.liuyuncen.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class OrderService {
     public static final String ORDER_KEY = "ord:";
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private RedisTemplate redisTemplate;
 
     public void addOrder(){
         int keyId = ThreadLocalRandom.current().nextInt(1000) + 1;
@@ -37,6 +38,6 @@ public class OrderService {
     }
 
     public String getOrderById(Integer keyId){
-        return redisTemplate.opsForValue().get(ORDER_KEY+keyId);
+        return (String) redisTemplate.opsForValue().get(ORDER_KEY+keyId);
     }
 }

@@ -13,18 +13,43 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 # ==========================  Redis 单机 ==========================
+#  redis:
+#    database: 0
+##    host: 192.168.58.10
+##    port: 16380
+#    host: 192.168.111.36
+#    port: 16379
+#    password: 123456
+#    letture:
+#      pool:
+#        max-active: 8
+#        max-idle: 8
+#        min-idle: 0
+#        max-wait: -1ms
+
+# ==========================  Redis 集群 ==========================
   redis:
-    database: 0
-    host: 192.168.58.10
-    port: 16380
-    password: 123456
+    cluster:
+      max-redirects: 3
+      nodes:
+        - 192.168.111.36:16301
+        - 192.168.111.36:16302
+        - 192.168.111.36:16303
+        - 192.168.111.36:16304
+        - 192.168.111.36:16305
+        - 192.168.111.36:16306
     letture:
+      # 支持集群拓扑动态感知刷新 默认为 false，开启后，当主从节点发生变化后，随之改变
+      cluster:
+        refresh:
+          period: 2000
+          adaptive: true
       pool:
         max-active: 8
         max-idle: 8
         min-idle: 0
         max-wait: -1ms
-
+    password: 123456
 
 
 logging:
