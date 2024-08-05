@@ -1,5 +1,6 @@
 package com.liuyuncen;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @description: TODO
  * @version: 1.0
  */
+@MapperScan("com.liuyuncen.mapper")
 @SpringBootApplication
 public class RedisStudy {
     public static void main(String[] args) {

@@ -1,6 +1,7 @@
 package com.liuyuncen.controller;
 
-import com.liuyuncen.service.OrderService;
+import com.liuyuncen.entity.User;
+import com.liuyuncen.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -18,22 +19,24 @@ import javax.annotation.Resource;
  */
 @RestController
 @Slf4j
-@Api(tags = "订单接口")
-@RequestMapping("/order")
-public class OrderController {
+@Api(tags = "用户接口")
+@RequestMapping("/user")
+public class UserController {
 
     @Resource
-    private OrderService orderService;
+    private UserService userService;
 
-    @ApiOperation("新增订单")
+    @ApiOperation("写入user用户")
     @PostMapping( "/add")
-    public void addOrder(){
-        orderService.addOrder();
+    public void addUser(@RequestBody User user){
+        userService.addUser(user);
+        log.info("*** user插入成功:{}",user);
     }
 
     @ApiOperation("按照keyId查询订单")
     @GetMapping( "/get/{keyId}")
-    public String getOrder(@PathVariable Integer keyId){
-        return orderService.getOrderById(keyId);
+    @ResponseBody
+    public User getOrder(@PathVariable Integer keyId){
+        return userService.findUserByIdHa(keyId);
     }
 }
