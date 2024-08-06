@@ -114,6 +114,12 @@ public class RedisCanalClientExample {
                 11111), "example", "", "");
         int batchSize = 1000;
         int emptyCount = 0;
+
+        // 这里使用了 try-with-resources
+        /*
+         * JDK 1.7 添加了 try-with-resources ，保证最后每个资源都关闭
+         * 任何实现了 java.lang.AutoCloseable 和 java.io.Closeable 的对象都可以使用 try-with-resources 实现异常处理和资源关闭
+         */
         try {
             connector.connect();
             // 监听当前库的所有表
