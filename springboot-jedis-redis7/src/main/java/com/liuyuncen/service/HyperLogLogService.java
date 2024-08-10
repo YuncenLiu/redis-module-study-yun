@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -18,7 +17,7 @@ public class HyperLogLogService {
 
     @PostConstruct
     public void initIp() {
-        addIp();
+//        addIp();
     }
 
     public long uv(){
