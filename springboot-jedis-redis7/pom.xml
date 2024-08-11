@@ -154,7 +154,6 @@
     </dependencies>
 
     <dependencyManagement>
-
         <dependencies>
             <dependency>
                 <groupId>com.mybatis-flex</groupId>

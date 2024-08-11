@@ -99,6 +99,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
             // 业务逻辑处理完成后， 删除
             stringRedisTemplate.delete(key);
         }
+
         return retMessage;
     }
 }
