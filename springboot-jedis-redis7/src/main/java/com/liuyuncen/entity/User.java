@@ -6,6 +6,15 @@ import com.mybatisflex.annotation.Table;
 import lombok.Data;
 
 /**
+ create table r_user(
+ id bigint NOT NULL AUTO_INCREMENT,
+ username varchar(40),
+ password varchar(40),
+ age int(3),
+ city varchar(11),
+ PRIMARY KEY (id)
+ )
+
  * @belongsProject: redis-module-study-yun
  * @belongsPackage: com.liuyuncen.entities
  * @author: Xiang想

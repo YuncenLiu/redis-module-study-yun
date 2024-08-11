@@ -1,9 +1,9 @@
 server:
-  port: 7983
+  port: 7778
 
 spring:
   application:
-    name: RedisStudy
+    name: redisDistributedLock3
   swagger2:
     enabled: true
 # 在springboot2.6.x结合swagger2.9.x会提示 documentationPluginsBootstrapper 空指针异常
@@ -14,7 +14,7 @@ spring:
       matching-strategy: ant_path_matcher
 # ==========================  Redis 单机 ==========================
   redis:
-    database: 0
+    database: 1
 #    host: 192.168.58.10
 #    port: 6379
     host: 192.168.111.36
@@ -26,17 +26,6 @@ spring:
         max-idle: 8
         min-idle: 0
         max-wait: -1ms
-
-# ==========================  MySQL 持久化配置 ==========================
-  datasource:
-    url: jdbc:mysql://192.168.111.36:3306/xiang?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
-mybatis-flex:
-  configuration:
-    ## 显示执行的SQL信息
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
 # ==========================  Redis 集群 ==========================
 #  redis:
 #    cluster:
@@ -66,7 +55,7 @@ logging:
   level:
     root: info
   file:
-    name: ./logs/springboot-jedis-redis7.log
+    name: ./logs/redis_distributed_lock3.log
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
