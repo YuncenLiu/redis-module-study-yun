@@ -3,6 +3,7 @@ package com.liuyuncen.service;
 import cn.hutool.core.util.IdUtil;
 import com.liuyuncen.entity.Inventory;
 import com.liuyuncen.mapper.InventoryMapper;
+import com.liuyuncen.redislock.DistributedLockFactory;
 import com.liuyuncen.redislock.RedisDistributedLock;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,8 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    @Autowired
+    private DistributedLockFactory distributedLockFactory;
 
     @Value("${server.port}")
     private String serverPort;
@@ -193,16 +196,39 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
                 Inventory inventory = new Inventory();
                 inventory.setSale(inventoryNumber);
                 inventory.setUuid(uuidValue);
-                inventory.setType("setNx"+serverPort);
+                inventory.setType("setLock"+serverPort);
                 inventory.setSucc("true");
 
                 save(inventory);
                 retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
                 log.info(retMessage);
+
+                testReEntry(lock);
             }
         }finally {
             lock.unlock();
         }
         return retMessage;
+    }
+
+    public void testReEntry(RedisDistributedLock lock){
+        String uuidValue = lock.getUuidValue();
+        lock.lock();
+        try {
+            // 查询库存信息
+            String result = stringRedisTemplate.opsForValue().get("inventory002");
+            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+            if (inventoryNumber > 0) {
+                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
+                Inventory inventory = new Inventory();
+                inventory.setSale(inventoryNumber);
+                inventory.setUuid(uuidValue);
+                inventory.setType("setUnLock"+serverPort);
+                inventory.setSucc("true");
+                save(inventory);
+            }
+        }finally {
+            lock.unlock();
+        }
     }
 }
