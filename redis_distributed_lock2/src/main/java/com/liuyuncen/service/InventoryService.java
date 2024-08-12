@@ -3,6 +3,7 @@ package com.liuyuncen.service;
 import cn.hutool.core.util.IdUtil;
 import com.liuyuncen.entity.Inventory;
 import com.liuyuncen.mapper.InventoryMapper;
+import com.liuyuncen.redislock.RedisDistributedLock;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+
     @Value("${server.port}")
     private String serverPort;
 
@@ -161,6 +164,44 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
                             "return 0 " +
                             "end";
             stringRedisTemplate.execute(new DefaultRedisScript<>(luaScript,Long.class), Arrays.asList(key),uuidValue);
+        }
+        return retMessage;
+    }
+
+
+    /**
+     * 功能描述： lua 实现可重入锁
+     *
+     * @author: Xiang
+     * @date: 2024年08月12日 22:38:37
+     * @Description:
+     * @return java.lang.String
+     */
+    public String saleRdl(){
+        String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
+
+        RedisDistributedLock lock = new RedisDistributedLock(stringRedisTemplate, "rdl");
+        String uuidValue = lock.getUuidValue();
+        lock.lock();
+        try {
+            // 查询库存信息
+            String result = stringRedisTemplate.opsForValue().get("inventory002");
+            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+
+            if (inventoryNumber > 0) {
+                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
+                Inventory inventory = new Inventory();
+                inventory.setSale(inventoryNumber);
+                inventory.setUuid(uuidValue);
+                inventory.setType("setNx"+serverPort);
+                inventory.setSucc("true");
+
+                save(inventory);
+                retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
+                log.info(retMessage);
+            }
+        }finally {
+            lock.unlock();
         }
         return retMessage;
     }
