@@ -8,8 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,7 +44,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
         try {
             // 查询库存信息
             String result = stringRedisTemplate.opsForValue().get("inventory001");
-            Integer inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
             log.info("sale --> 当前库存剩余：{}",inventoryNumber);
             if (inventoryNumber > 0) {
                 stringRedisTemplate.opsForValue().set("inventory001", String.valueOf(--inventoryNumber));
@@ -58,9 +60,12 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     /**
      * 功能描述： setNx 实现分布式锁
      * 禁止使用递归，容易造成堆栈异常
+     *
+     * 存在问题：A线程加锁，锁定时3秒，实际业务超出3秒，3秒后，锁自然释放，B线程进来正常操作，
+     * 此时A结束后，把锁干掉了，B线程正常完成后，发现锁没了...
+     *
      * @author: Xiang
      * @date: 2024年08月11日 23:41:47
-     * @Description:
      * @return java.lang.String
      */
     public String saleSetNx(){
@@ -69,7 +74,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
         String uuidValue = IdUtil.simpleUUID()+":"+Thread.currentThread().getId();
 
 
-        while (!stringRedisTemplate.opsForValue().setIfAbsent(key, uuidValue)){
+        while (Boolean.FALSE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, uuidValue, 3, TimeUnit.SECONDS))){
             try {
                 log.info("获取锁失败，重试 value为:{}",uuidValue);
                 TimeUnit.MILLISECONDS.sleep(20);
@@ -81,7 +86,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
         try {
             // 查询库存信息
             String result = stringRedisTemplate.opsForValue().get("inventory002");
-            Integer inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
 
             if (inventoryNumber > 0) {
                 stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
@@ -97,9 +102,66 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
             }
         }finally {
             // 业务逻辑处理完成后， 删除
-            stringRedisTemplate.delete(key);
-        }
+            // 存在实际业务超出预期的超出时间，容易造成 Redis 误删他人添加进来的锁
+            if(uuidValue.equalsIgnoreCase(stringRedisTemplate.opsForValue().get(key))){
 
+                // 即使如此 非原子操作也不是很好。
+                stringRedisTemplate.delete(key);
+            }
+        }
+        return retMessage;
+    }
+
+
+    /**
+     * 功能描述：lua实现 setNx 无法解决的删除原子性问题
+     *
+     * @author: Xiang
+     * @date: 2024年08月11日 23:41:47
+     * @return java.lang.String
+     */
+    public String saleLua(){
+        String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
+        String key = "redisLock";
+        String uuidValue = IdUtil.simpleUUID()+":"+Thread.currentThread().getId();
+
+
+        while (Boolean.FALSE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, uuidValue, 3, TimeUnit.SECONDS))){
+            try {
+                log.info("获取锁失败，重试 value为:{}",uuidValue);
+                TimeUnit.MILLISECONDS.sleep(20);
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            // 查询库存信息
+            String result = stringRedisTemplate.opsForValue().get("inventory002");
+            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+
+            if (inventoryNumber > 0) {
+                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
+                Inventory inventory = new Inventory();
+                inventory.setSale(inventoryNumber);
+                inventory.setUuid(uuidValue);
+                inventory.setType("setNx"+serverPort);
+                inventory.setSucc("true");
+
+                save(inventory);
+                retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
+                log.info(retMessage);
+            }
+        }finally {
+
+            String luaScript =
+                    "if redis.call('get',KEYS[1]) == ARGV[1] then " +
+                        "return redis.call('del',KEYS[1]) " +
+                    "else " +
+                        "return 0 " +
+                    "end";
+            stringRedisTemplate.execute(new DefaultRedisScript<>(luaScript,Long.class), Arrays.asList(key),uuidValue);
+        }
         return retMessage;
     }
 }

@@ -15,10 +15,10 @@ spring:
 # ==========================  Redis 单机 ==========================
   redis:
     database: 1
-#    host: 192.168.58.10
-#    port: 6379
-    host: 192.168.111.36
+    host: 192.168.58.10
     port: 6379
+#    host: 192.168.111.36
+#    port: 6379
     password: 123456
     letture:
       pool:
@@ -51,7 +51,7 @@ spring:
 #    password: 123456
   # ==========================  MySQL 持久化配置 ==========================
   datasource:
-    url: jdbc:mysql://192.168.111.36:3306/xiang?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.58.10:3306/xiang?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 123456
 mybatis-flex:

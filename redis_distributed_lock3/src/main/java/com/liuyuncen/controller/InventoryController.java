@@ -31,4 +31,10 @@ public class InventoryController {
     public String saleSetNx(){
         return inventoryService.saleSetNx();
     }
+
+    @ApiOperation("分布式锁 Lua 实现")
+    @GetMapping("/saleLua")
+    public String saleLua(){
+        return inventoryService.saleLua();
+    }
 }
