@@ -38,9 +38,9 @@ public class InventoryController {
         return inventoryService.saleLua();
     }
 
-    @ApiOperation("分布式锁 Lua 实现可重入锁")
-    @GetMapping("/saleLua/Distributed")
-    public String saleLuaDistributed(){
-        return inventoryService.saleRdl();
-    }
+//    @ApiOperation("分布式锁 Lua 实现可重入锁")
+//    @GetMapping("/saleLua/Distributed")
+//    public String saleLuaDistributed(){
+//        return inventoryService.saleRdl();
+//    }
 }

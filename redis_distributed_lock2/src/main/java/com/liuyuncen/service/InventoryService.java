@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -28,7 +29,16 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     @Autowired
     private DistributedLockFactory distributedLockFactory;
 
-    RedisDistributedLock redisDistributedLock = new RedisDistributedLock(stringRedisTemplate, "rdl");
+
+    Lock redisDistributedLock ;
+
+
+    @PostConstruct
+    public void init(){
+        redisDistributedLock  = new RedisDistributedLock(stringRedisTemplate, "rdl");
+    }
+
+
     @Value("${server.port}")
     private String serverPort;
 
@@ -181,55 +191,55 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
      * @Description:
      * @return java.lang.String
      */
-    public String saleRdl(){
-        String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
-
-
-        String uuidValue = redisDistributedLock.getUuidValue();
-        redisDistributedLock.lock();
-        try {
-            // 查询库存信息
-            String result = stringRedisTemplate.opsForValue().get("inventory002");
-            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
-
-            if (inventoryNumber > 0) {
-                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
-                Inventory inventory = new Inventory();
-                inventory.setSale(inventoryNumber);
-                inventory.setUuid(uuidValue);
-                inventory.setType("setLock"+serverPort);
-                inventory.setSucc("true");
-
-                save(inventory);
-                retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
-                log.info(retMessage);
-
-                testReEntry(redisDistributedLock);
-            }
-        }finally {
-            redisDistributedLock.unlock();
-        }
-        return retMessage;
-    }
-
-    public void testReEntry(RedisDistributedLock lock){
-        String uuidValue = lock.getUuidValue();
-        lock.lock();
-        try {
-            // 查询库存信息
-            String result = stringRedisTemplate.opsForValue().get("inventory002");
-            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
-            if (inventoryNumber > 0) {
-                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
-                Inventory inventory = new Inventory();
-                inventory.setSale(inventoryNumber);
-                inventory.setUuid(uuidValue);
-                inventory.setType("setUnLock"+serverPort);
-                inventory.setSucc("true");
-                save(inventory);
-            }
-        }finally {
-            lock.unlock();
-        }
-    }
+//    public String saleRdl(){
+//        String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
+//
+//
+//        String uuidValue = redisDistributedLock.getUuidValue();
+//        redisDistributedLock.lock();
+//        try {
+//            // 查询库存信息
+//            String result = stringRedisTemplate.opsForValue().get("inventory002");
+//            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+//
+//            if (inventoryNumber > 0) {
+//                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
+//                Inventory inventory = new Inventory();
+//                inventory.setSale(inventoryNumber);
+//                inventory.setUuid(uuidValue);
+//                inventory.setType("setLock"+serverPort);
+//                inventory.setSucc("true");
+//
+//                save(inventory);
+//                retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
+//                log.info(retMessage);
+//
+//                testReEntry(redisDistributedLock);
+//            }
+//        }finally {
+//            redisDistributedLock.unlock();
+//        }
+//        return retMessage;
+//    }
+//
+//    public void testReEntry(RedisDistributedLock lock){
+//        String uuidValue = lock.getUuidValue();
+//        lock.lock();
+//        try {
+//            // 查询库存信息
+//            String result = stringRedisTemplate.opsForValue().get("inventory002");
+//            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+//            if (inventoryNumber > 0) {
+//                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
+//                Inventory inventory = new Inventory();
+//                inventory.setSale(inventoryNumber);
+//                inventory.setUuid(uuidValue);
+//                inventory.setType("setUnLock"+serverPort);
+//                inventory.setSucc("true");
+//                save(inventory);
+//            }
+//        }finally {
+//            lock.unlock();
+//        }
+//    }
 }
