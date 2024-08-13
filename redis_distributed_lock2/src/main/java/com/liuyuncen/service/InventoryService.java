@@ -28,6 +28,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     @Autowired
     private DistributedLockFactory distributedLockFactory;
 
+    RedisDistributedLock redisDistributedLock = new RedisDistributedLock(stringRedisTemplate, "rdl");
     @Value("${server.port}")
     private String serverPort;
 
@@ -183,9 +184,9 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     public String saleRdl(){
         String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
 
-        RedisDistributedLock lock = new RedisDistributedLock(stringRedisTemplate, "rdl");
-        String uuidValue = lock.getUuidValue();
-        lock.lock();
+
+        String uuidValue = redisDistributedLock.getUuidValue();
+        redisDistributedLock.lock();
         try {
             // 查询库存信息
             String result = stringRedisTemplate.opsForValue().get("inventory002");
@@ -203,10 +204,10 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
                 retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
                 log.info(retMessage);
 
-                testReEntry(lock);
+                testReEntry(redisDistributedLock);
             }
         }finally {
-            lock.unlock();
+            redisDistributedLock.unlock();
         }
         return retMessage;
     }
