@@ -4,7 +4,10 @@ import cn.hutool.core.util.IdUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -31,7 +34,7 @@ public class RedisDistributedLock implements Lock {
         this.expireTime = 50L;
     }
 
-    public String getUuidValue(){
+    public String getUuidValue() {
         return this.uuidValue;
     }
 
@@ -53,12 +56,12 @@ public class RedisDistributedLock implements Lock {
     /**
      * 功能描述：
      *
-     * @author: Xiang
-     * @date: 2024年08月12日 22:17:50
-     * @Description:
      * @param time 时间长度
      * @param unit 时间单元
      * @return boolean 加锁是否成功
+     * @author: Xiang
+     * @date: 2024年08月12日 22:17:50
+     * @Description:
      */
     @Override
     public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
@@ -68,12 +71,13 @@ public class RedisDistributedLock implements Lock {
                             "redis.call('hincrby', KEYS[1], ARGV[1] , 1) " +
                             "redis.call('expire', KEYS[1], ARGV[2]) " +
                             "return 1 " +
-                            "else " +
+                    "else " +
                             "return 0 " +
-                            "end";
-            while (Boolean.FALSE.equals(stringRedisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Collections.singletonList(lockName), uuidValue, String.valueOf(expireTime)))){
+                    "end";
+            while (Boolean.FALSE.equals(stringRedisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Collections.singletonList(lockName), uuidValue, String.valueOf(expireTime)))) {
                 TimeUnit.MILLISECONDS.sleep(60);
             }
+            renewExpire();
             return true;
         }
         return false;
@@ -84,16 +88,35 @@ public class RedisDistributedLock implements Lock {
         String script =
                 "if redis.call('hexists',KEYS[1], ARGV[1]) == 0 then " +
                         "return nil " +
-                        "elseif redis.call('hincrby',KEYS[1], ARGV[1] , -1) == 0 then " +
+                "elseif redis.call('hincrby',KEYS[1], ARGV[1] , -1) == 0 then " +
                         "return redis.call('del', KEYS[1]) " +
-                        "else " +
+                "else " +
                         "return 0 " +
-                        "end ";
+                "end ";
         // nil = false  1 = true 0 = false
         Long flag = stringRedisTemplate.execute(new DefaultRedisScript<>(script, Long.class), Collections.singletonList(lockName), uuidValue, String.valueOf(expireTime));
-        if (null == flag){
+        if (null == flag) {
             throw new RuntimeException("this lock doesn't exists");
         }
+    }
+
+
+    private void renewExpire() {
+        String script =
+                "if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 then " +
+                        "return redis.call('expire', KEYS[1], ARGV[2]) " +
+                "else " +
+                        "return 0 " +
+                "end ";
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (stringRedisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Collections.singletonList(lockName), uuidValue, String.valueOf(expireTime))){
+                    System.out.println("重新续签");
+                    renewExpire();
+                }
+            }
+        }, (this.expireTime * 1000) / 3);
     }
 
     // 不考虑中断
