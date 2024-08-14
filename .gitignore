@@ -5,3 +5,4 @@
 **/.gitignore
 /logs/
 **/target
+/springboot-jedis-redis7/logs/

@@ -8,6 +8,7 @@ import com.liuyuncen.redislock.RedisDistributedLock;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
+import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -40,7 +41,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
 //    public void init(){
 //        redisDistributedLock  = new RedisDistributedLock(stringRedisTemplate, "rdl");
 //    }
- 
+
 
     @Value("${server.port}")
     private String serverPort;
@@ -266,10 +267,8 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
 
     public String saleByRedisson() {
         String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
-
-        RedisDistributedLock redisDistributedLock  = new RedisDistributedLock(stringRedisTemplate, "rdl");
-        String uuidValue = redisDistributedLock.getUuidValue();
-        redisDistributedLock.lock();
+        RLock redisLock = redisson.getLock("redisLock");
+        redisLock.lock();
         try {
             // 查询库存信息
             String result = stringRedisTemplate.opsForValue().get("inventory002");
@@ -279,7 +278,6 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
                 stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
                 Inventory inventory = new Inventory();
                 inventory.setSale(inventoryNumber);
-                inventory.setUuid(uuidValue);
                 inventory.setType("setLock"+serverPort);
                 inventory.setSucc("true");
 
@@ -292,13 +290,20 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
                 }
 
                 save(inventory);
-                retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
+                retMessage = "服务" + serverName + ":" + serverPort + " 成功卖出1个商品，库存剩余" + inventoryNumber;
                 log.info(retMessage);
 
-                testReEntry(redisDistributedLock);
             }
         }finally {
-            redisDistributedLock.unlock();
+
+            // 这一块是不是有问题呀？  Java做两步操作还能保证原子嘛？
+            // 而且 Redisson 自身带着key去操作的，何必多此一举呢 ?
+
+            // 应该这样去看待这个判断， 解锁操作避免此前已经重复解锁，或者因为其他什么情况导致锁失效而写的一段代码，
+            // redisson 自身默认具有 30秒/3 这样一个续期操作。
+            if (redisLock.isLocked() && redisLock.isHeldByCurrentThread()) {
+                redisLock.unlock();
+            }
         }
         return retMessage;
     }
