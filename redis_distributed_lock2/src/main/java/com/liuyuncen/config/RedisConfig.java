@@ -1,5 +1,7 @@
 package com.liuyuncen.config;
 
+import org.redisson.Redisson;
+import org.redisson.config.Config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -31,4 +33,13 @@ public class RedisConfig {
         redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }
+
+
+    @Bean
+    public Redisson redisson(){
+        Config config = new Config();
+        config.useSingleServer().setAddress("192.168.58.10:6390").setPassword("123456").setDatabase(0);
+        return (Redisson) Redisson.create(config);
+    }
+
 }

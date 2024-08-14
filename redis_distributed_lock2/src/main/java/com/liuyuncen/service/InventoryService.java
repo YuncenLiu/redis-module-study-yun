@@ -7,16 +7,14 @@ import com.liuyuncen.redislock.DistributedLockFactory;
 import com.liuyuncen.redislock.RedisDistributedLock;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.Redisson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Arrays;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -31,6 +29,9 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     @Autowired
     private DistributedLockFactory distributedLockFactory;
 
+    @Autowired
+    private Redisson redisson;
+
 
 //    Lock redisDistributedLock ;
 //
@@ -39,7 +40,7 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
 //    public void init(){
 //        redisDistributedLock  = new RedisDistributedLock(stringRedisTemplate, "rdl");
 //    }
-
+ 
 
     @Value("${server.port}")
     private String serverPort;
@@ -254,4 +255,51 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
     }
 
 
+
+    /**
+     * @description: Redisson 官方推荐 redisLock 算法类实现
+     * @author: Xiang想
+     * @date: 2024/8/14 17:49
+     * @param: []
+     * @return: java.lang.String
+     **/
+
+    public String saleByRedisson() {
+        String retMessage = "服务" + serverName + ":" + serverPort +  "商品卖完了";
+
+        RedisDistributedLock redisDistributedLock  = new RedisDistributedLock(stringRedisTemplate, "rdl");
+        String uuidValue = redisDistributedLock.getUuidValue();
+        redisDistributedLock.lock();
+        try {
+            // 查询库存信息
+            String result = stringRedisTemplate.opsForValue().get("inventory002");
+            int inventoryNumber = result == null ? 0 : Integer.parseInt(result);
+
+            if (inventoryNumber > 0) {
+                stringRedisTemplate.opsForValue().set("inventory002", String.valueOf(--inventoryNumber));
+                Inventory inventory = new Inventory();
+                inventory.setSale(inventoryNumber);
+                inventory.setUuid(uuidValue);
+                inventory.setType("setLock"+serverPort);
+                inventory.setSucc("true");
+
+
+                // 验证看门狗
+                try {
+                    TimeUnit.SECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                save(inventory);
+                retMessage = "服务" + serverName + ":" + serverPort + " UUID "+uuidValue+" 成功卖出1个商品，库存剩余" + inventoryNumber;
+                log.info(retMessage);
+
+                testReEntry(redisDistributedLock);
+            }
+        }finally {
+            redisDistributedLock.unlock();
+        }
+        return retMessage;
+    }
 }

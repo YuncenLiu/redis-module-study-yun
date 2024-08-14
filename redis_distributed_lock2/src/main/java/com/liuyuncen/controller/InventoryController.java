@@ -43,4 +43,11 @@ public class InventoryController {
     public String saleLuaDistributed(){
         return inventoryService.saleRdl();
     }
+
+
+    @ApiOperation("分布式锁 Redisson 实现")
+    @GetMapping("/saleByRedisson")
+    public String saleByRedisson(){
+        return inventoryService.saleByRedisson();
+    }
 }
