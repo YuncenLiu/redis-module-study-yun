@@ -4,7 +4,6 @@ import com.liuyuncen.entity.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.config.CronTask;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -32,8 +31,8 @@ public class JHSTaskService {
 
      @PostConstruct
     public void initJHS(){
-         log.info("启动定时任务聚划算功能模拟开始....");
-         initFunction2();
+//         log.info("启动定时任务聚划算功能模拟开始....");
+//         initFunction2();
 
     }
 

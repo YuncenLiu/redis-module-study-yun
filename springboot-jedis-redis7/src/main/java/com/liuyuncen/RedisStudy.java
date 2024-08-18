@@ -17,5 +17,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class RedisStudy {
     public static void main(String[] args) {
         SpringApplication.run(RedisStudy.class, args);
+        System.out.println("http://127.0.0.1:7983/swagger-ui.html#/");
     }
 }

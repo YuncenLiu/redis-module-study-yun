@@ -14,12 +14,12 @@ spring:
       matching-strategy: ant_path_matcher
 # ==========================  Redis 单机 ==========================
   redis:
-    database: 0
+    database: 4
 #    host: 192.168.58.10
 #    port: 6379
-    host: 192.168.111.36
-    port: 6379
-    password: 123456
+    host: liuyuncen.com
+    port: 6389
+    password: 546820.0@lyc
     letture:
       pool:
         max-active: 8
@@ -29,9 +29,9 @@ spring:
 
 # ==========================  MySQL 持久化配置 ==========================
   datasource:
-    url: jdbc:mysql://192.168.111.36:3306/xiang?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
+    url: jdbc:mysql://liuyuncen.com:3388/redis_study?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: redis
+    password: Redis!234
 mybatis-flex:
   configuration:
     ## 显示执行的SQL信息
