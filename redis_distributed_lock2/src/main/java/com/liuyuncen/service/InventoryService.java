@@ -283,11 +283,11 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
 
 
                 // 验证看门狗
-                try {
-                    TimeUnit.SECONDS.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+//                try {
+//                    TimeUnit.SECONDS.sleep(100);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
 
                 save(inventory);
                 retMessage = "服务" + serverName + ":" + serverPort + " 成功卖出1个商品，库存剩余" + inventoryNumber;

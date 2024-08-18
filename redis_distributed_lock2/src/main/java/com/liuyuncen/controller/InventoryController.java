@@ -44,10 +44,9 @@ public class InventoryController {
         return inventoryService.saleRdl();
     }
 
-
     @ApiOperation("分布式锁 Redisson 实现")
     @GetMapping("/saleByRedisson")
-    public String saleByRedisson(){
+    public String saleByRedisson(Integer count){
         return inventoryService.saleByRedisson();
     }
 }
