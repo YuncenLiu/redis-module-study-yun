@@ -14,7 +14,7 @@ spring:
       matching-strategy: ant_path_matcher
 # ==========================  Redis 单机 ==========================
   redis:
-    database: 4
+    database: 0
 #    host: 192.168.58.10
 #    port: 6379
     host: liuyuncen.com
